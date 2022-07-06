@@ -1,0 +1,61 @@
+#DNS Configuration Steps
+
+1. Install bind
+	dnf install bind bind-utils -y
+
+2. edit /etc/named.conf
+	vim /etc/named.conf
+
+3. add forward and reverse zone in /etc/named.conf
+
+zone "mafia.com" IN {
+	type master;
+	file "fw.mafia.com";
+	allow-update { none; };
+};
+
+zone "122.168.192.in-addr.arpa" IN {
+	type master;
+	file "rv.mafia.com"
+	allow-update { none; };
+};
+
+
+4. create 2 files fw.mafia.com and rv.mafia.com in /var/named/
+	use named.localhost for fw.mafia.com
+	use named.loopback for rv.mafia.com
+
+5. change ownership of zone files to "named"
+	chown root:named fw.mafia.com
+	chown root:named rv.mafia.com
+
+6. edit zone files 
+	vim fw.mafia.com
+	
+@	IN SOA	servera.mafia.com. root.mafia.com.
+.
+.
+@	IN	NS	servera.mafia.com
+mafia.com	IN A	192.168.122.18
+servera		IN A	192.168.122.18
+clienta		IN A	192.168.122.101
+
+___________________________________________________________
+	vim rv.mafia.com
+
+@	IN	NS	servera.mafia.com.
+18	IN	PTR	servera.mafia.com.
+101	IN	PTR	clienta
+
+7. check named.conf file for errors by loading
+	named-checkconf /ets/named.conf
+
+8. check zone files for error
+	named-checkzone mafia.com /var/named/fw.mafia.com
+	named-checkzone 122.168.192.in-addr.arpa /var/named/rv.mafia.com
+
+9. start named service and enable
+	systemctl start named
+	systemctl enable named
+	
+
